@@ -10,13 +10,19 @@ then it's the file hashes checker endpoint
 the run analysis
 the run entire script
 """
-
 ###### imports ######
 
 import re # allows for searching strings for patterns
 # import jsonify
 import requests
 from flask import Flask, jsonify, request
+from dotenv import load_dotenv
+import os
+
+###### API call ######
+
+load_dotenv()
+api_key = os.getenv("ABUSEIPDB_API_KEY")
 
 ###### Endpoint 1: Health Check ######
 
@@ -84,9 +90,42 @@ def password_check():
 
     return jsonify ({'point': point, 'tier': tier }), 200
 
-    
+###### Endpoin 3: IP Reputation ######
+
+@app.route('/api/ip/check', methods = ['POST'])
+
+def ip_check():
+
+    data = request.get_json() 
+    url = "https://api.abuseipdb.com/api/v2/check"
+    ip = data ['ip']
+    response = requests.get(url, headers = {"Key": api_key}, params = {"ipAddress": ip})
+
+    result = response.json()
+    score = result ['data']['abuseConfidenceScore']
+    flagged = score > 60
+
+    return jsonify ({'ip': ip, 'score': score, 'flagged': flagged})
+
+###### Endpoint 4: File Hashes ######
+
+@app.route('/api/file/hashes', methods = ['POST'])
+
+def file_hash():
+    signatures = request.get_json()
+    url = ""
+    hashes = signatures ['hash(e.g)']
+    response = requests.get()
+
+    result = response.json()
+    signature = '' #need to find out about their docs on hashes
+
+    # then simple if logic on if == this the rate whether virus or something
+    return jsonify ({'hashes': hashes, 'signature': signature})
 
 
+
+ 
 ####### Main Execution Block ######
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
