@@ -144,25 +144,25 @@ Compare the score to your threshold
 Build my own jsonify response using ip, the score, and your flagged true/false verdict
 """
 
-import os
-import requests
-from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+# import os
+# import requests
+# from dotenv import load_dotenv
+# from flask import Flask, jsonify, request
 
-def ip_rep():
-    # no.1: fetch API key
-    load_dotenv()
+# def ip_rep():
+#     # no.1: fetch API key
+#     load_dotenv()
 
-    api_key = os.getenv("ABUSEIPDB_API_KEY") # but has to  be above, not just in fuction, we'll fix it
-    # no.1 done
+#     api_key = os.getenv("ABUSEIPDB_API_KEY") # but has to  be above, not just in fuction, we'll fix it
+#     # no.1 done
 
-    #no.2 : outgoing requests. # POST right? Yes: submits an entity to the specified resource
-    # oh no, we're not giving them something, we're asking and getting somthing from them, so we use the GET
-    # i need the url to post to and based on docs: https://api.abuseipdb.com/api/v2/check
-    # what are we sending? the ip, the url and what else? the type of data we want back which is a json. what else?
-    url = "https://api.abuseipdb.com/api/v2/check"
-    ip = input("") # for testing sake we'll have an input
-    response = requests.get({'key': api_key, 'url': url, 'ip address': ip})
+#     #no.2 : outgoing requests. # POST right? Yes: submits an entity to the specified resource
+#     # oh no, we're not giving them something, we're asking and getting somthing from them, so we use the GET
+#     # i need the url to post to and based on docs: https://api.abuseipdb.com/api/v2/check
+#     # what are we sending? the ip, the url and what else? the type of data we want back which is a json. what else?
+#     url = "https://api.abuseipdb.com/api/v2/check"
+#     ip = input("") # for testing sake we'll have an input
+#     response = requests.get({'key': api_key, 'url': url, 'ip address': ip})
     # wrong according to docs
 
     # we can do this, store the values in variables or a list/ dict, then call the list in the requests.get
@@ -170,40 +170,144 @@ def ip_rep():
 
 # cleaner version:
 
-import os
-import requests
-from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+# import os
+# import requests
+# from dotenv import load_dotenv
+# from flask import Flask, jsonify, request
 
-load_dotenv()
-api_key = os.getenv("ABUSEIPDB_API_KEY")
+# load_dotenv()
+# abuse_api_key = os.getenv("ABUSEIPDB_API_KEY")
+# virus_api_key = os.getenv("VIRUSTOTAL_API_KEY")
 
-def ip_rep():
-    data = request.get_json() # i don't fully understand here: flask module knowledge gap
-    url = "https://api.abuseipdb.com/api/v2/check"
-    ip = data ['ip'] # i don't fully understand here: flask gap again
-    response = requests.get(url, headers = {"Key": api_key}, params = {"ipAddress": ip})
+# def ip_rep():
+#     data = request.get_json() # i don't fully understand here: flask module knowledge gap
+#     url = "https://api.abuseipdb.com/api/v2/check"
+#     ip = data ['ip'] # i don't fully understand here: flask gap again
+#     response = requests.get(url, headers = {"Key": abuse_api_key}, params = {"ipAddress": ip})
 
-    return jsonify({'report': response.json()}) # needs to be captured
+#     return jsonify({'report': response.json()}) # needs to be captured
 
 # since i specifically need to score it and have my own threshold
 
 #complete version of endpoint 3
 
+# import os
+# import requests
+# from dotenv import load_dotenv
+# from flask import Flask, jsonify, request
+
+# load_dotenv()
+# api_key = os.getenv("ABUSEIPDB_API_KEY")
+
+# def ip_report():
+#     data = request.get_json() #client hands me a note and asks me to check if the ip is trustworthy # i don't fully understand here: flask module knowledge gap
+#     url = "https://api.abuseipdb.com/api/v2/check" # i pick up the phone and dial this number (url) to the AbuseIPDB office to check about the IP
+#     ip = data ['ip'] # in the note i got, i'm only looking at the value next to ip and ignoring therest of the contents on the note while the phone is ringing
+#     response = requests.get(url, headers = {"Key": api_key}, params = {"ipAddress": ip}) # when the AbuseIPDB office answer's the phone, i tell them that hey, i just dialed your number (url), 
+#     # here's my ID badge number to prove i have authorisation to ask (header: api key),  and here's the ip i want you to look up for me (params: which is the number next to the words ip i am looking at on the customer's note)
+#     # they say they'll check and send me an email
+#     result = response.json() # they sent me an email and i just opened it and read it
+#     score = result ['data']['abuseConfidenceScore'] # it's a long document so i look for exactly where it tells me the risk number of the ip the customer just gave me
+#     flagged = score > 60 # i'm shocked at what i see so i make a rule based on my experience that any score above 60 is a risk
+#     return jsonify ({'ip': ip, 'score': score, 'flagged': flagged}) # then i finnally relay the message to the customer to say whether the ip is safe or not, based on my expertise
+
+
 import os
 import requests
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 
 load_dotenv()
-api_key = os.getenv("ABUSEIPDB_API_KEY")
+abuse_api_key = os.getenv("ABUSEIPDB_API_KEY")
+virus_api_key = os.getenv("VIRUSTOTAL_API_KEY")
+'''
+Here the case is a bit different:
+the client still hands me a note to ask me to check the hash
+but immediately when i dial the number to the VirusTotal, they already know the hash i'm asking them about
+but i still have to ptovide my ID badge number
+then in their email to me, i have to go through layers of documentation
+then i dentify which of the 4 counts does the hash i found belong to
+i also have to determine just in case, what to respond to my client, if the hash has never been submitted to VirusTotal
+then also based on my expertise, determine whether the hash is cool or not to my client
+then return/give them my report that answers their question
+'''
+# 1st attempt
 
-def ip_rep():
-    data = request.get_json() # i don't fully understand here: flask module knowledge gap
-    url = "https://api.abuseipdb.com/api/v2/check"
-    ip = data ['ip'] # i don't fully understand here: flask gap again
-    response = requests.get(url, headers = {"Key": api_key}, params = {"ipAddress": ip})
-    result = response.json()
-    score = result ['data']['abuseConfidenceScore']
-    flagged = score > 60
-    return jsonify ({'ip': ip, 'score': score, 'flagged': flagged})
+# def file_hash():
+#     data = request.get_json()
+#     url = "https://www.virustotal.com/api/v3/files/{hash}"
+#     response = requests.get({'x-apikey': virus_api_key})
+#     if response == 404:
+#         return "Hash not found"
+#     result = response.json() #need to set a condition incase of a 404 before this (done)
+#     score = result['data'] ['attributes'] ['last_analysis_stats']
+#     # condition for what's bad or not
+#     flag  = 
+#     return jsonify ({'hash': {hash}, 'score': score,'flagged': flag}, )
+
+#     result = response.json()
+#     signature = '' #need to find out about their docs on hashes
+
+#     # then simple if logic on if == this the rate whether virus or something
+#     return jsonify ({})
+
+
+# # 2nd attempt
+
+# def file_hash():
+#     data = request.get_json()
+#     hash = data['hash']
+#     url = f"https://www.virustotal.com/api/v3/files/{hash}"
+#     response = requests.get(url, headers = {"Key": virus_api_key})
+#     # code = response.status_code
+#     if response.status_code == 404:
+#         return "Hash not found"
+#     result = response.json() #need to set a condition incase of a 404 before this (done)
+#     print (f'{result}')
+#     score = result['data'] ['attributes'] ['last_analysis_stats'] # no need to create conditions
+#     # i can say if score == malicious print malicious etc.
+#     # condition for what's bad or not
+#     flag  = # then meaning no need for flag. unless i find out what types to ranking is given for each of the 4,
+#     # but i can use their rules, which is honestly safer since i don't know much about hashes
+#     return jsonify ({'hash': {hash}, 'score': score,'flagged': flag}, )
+
+#     # then simple if logic on if == this the rate whether virus or something
+#     return jsonify ({})
+
+# # sandy
+# # 2nd attempt
+
+# def file_hash():
+#     data = request.get_json()
+#     url = "https://www.virustotal.com/api/v3/files/{hash}"
+#     response = requests.get({'x-apikey': virus_api_key})
+#     if response == 404:
+#         return "Hash not found"
+#     result = response.json() #need to set a condition incase of a 404 before this (done)
+#     score = result['data'] ['attributes'] ['last_analysis_stats']
+#     print (f'{score}')
+#     # condition for what's bad or not
+#     return jsonify ({'hash': {hash}, 'score': score}, )
+
+#     # then simple if logic on if == this the rate whether virus or something
+#     return jsonify ({})
+
+
+# 3rd attempt
+
+def file_hash():
+    data = request.get_json()
+    hash = data['hash']
+    url = f"https://www.virustotal.com/api/v3/files/{hash}"
+    response = requests.get(url, headers = {"x-apikey": virus_api_key})
+    # code = response.status_code
+    if response.status_code == 404:
+        return "Hash not found"
+    result = response.json() #need to set a condition incase of a 404 before this (done)
+    print (f'{result}')
+    score = result['data'] ['attributes'] ['last_analysis_stats'] # no need to create conditions
+    # i can say if score == malicious print malicious etc.
+    # condition for what's bad or not
+    malicious_count = score ['malicious']
+    print(f'{malicious_count}')
+    return jsonify ({'hash': hash, 'score': score} )

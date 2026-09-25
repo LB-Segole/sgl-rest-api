@@ -22,7 +22,8 @@ import os
 ###### API call ######
 
 load_dotenv()
-api_key = os.getenv("ABUSEIPDB_API_KEY")
+abuse_api_key = os.getenv("ABUSEIPDB_API_KEY")
+virus_api_key = os.getenv("VIRUSTOTAL_API_KEY")
 
 ###### Endpoint 1: Health Check ######
 
@@ -99,7 +100,7 @@ def ip_check():
     data = request.get_json() 
     url = "https://api.abuseipdb.com/api/v2/check"
     ip = data ['ip']
-    response = requests.get(url, headers = {"Key": api_key}, params = {"ipAddress": ip})
+    response = requests.get(url, headers = {"Key": abuse_api_key}, params = {"ipAddress": ip})
 
     result = response.json()
     score = result ['data']['abuseConfidenceScore']
@@ -112,16 +113,21 @@ def ip_check():
 @app.route('/api/file/hashes', methods = ['POST'])
 
 def file_hash():
-    signatures = request.get_json()
-    url = ""
-    hashes = signatures ['hash(e.g)']
-    response = requests.get()
 
+    data = request.get_json()
+    file_hash = data ['hash']
+
+    url = f"https://www.virustotal.com/api/v3/files/{file_hash}"
+    response = requests.get(url, headers = {"x-apikey": virus_api_key})
+
+    if response.status_code == 404:
+        return jsonify ({'error': 'Hash not found'}), 404
+    
     result = response.json()
-    signature = '' #need to find out about their docs on hashes
+    print(result)
+    score = result['data'] ['attributes'] ['last_analysis_stats']
 
-    # then simple if logic on if == this the rate whether virus or something
-    return jsonify ({'hashes': hashes, 'signature': signature})
+    return jsonify ({'hash': file_hash, 'score': score})
 
 
 
