@@ -1,19 +1,9 @@
 # sgl-threat-api
 # A live REST API that analyses passwords, IP addresses, and file hashes against known-bad signatures and returns a real-time security verdict over HTTP.
 
-# how do we start with this?
-""" first there's the imports
-then we come with the health check endpoint
-then the password strength checker endpoint
-then the ip reputation checker endpoint
-then it's the file hashes checker endpoint
-the run analysis
-the run entire script
-"""
 ###### imports ######
 
-import re # allows for searching strings for patterns
-# import jsonify
+import re
 import requests
 from flask import Flask, jsonify, request
 from dotenv import load_dotenv
@@ -36,15 +26,7 @@ def health_check():
 
 ###### Endpoint 2: Password Strength Check ######
 
-# @app.route('/api/password/check', methods = ['GET'])
-# checked the dicuments it's post not get since the rules have to be checked against the password so they have to saty in the server
 @app.route('/api/password/check', methods = ['POST'])
-
-
-
-# def password_strength(): # functions that checks the conditions for the password, requirements in note
-# we can use re module instead of looping manually, but for learning's sake let's try the manual looping
-# how do we loop again? for/ while loops
 
 def password_check():
 
@@ -59,7 +41,6 @@ def password_check():
     else:
         point = 0
 
-    #length check done, now for upper case
     upper = any(char.isupper() for char in password)
     if upper == True:
         point += 1.5
@@ -75,8 +56,6 @@ def password_check():
     special = any(not char.isalnum() for char in password)
     if special == True:
         point += 1.5
-
-    # tier = sum([length, upper, lower, digit, special])
 
     tier = point
 
@@ -112,7 +91,7 @@ def ip_check():
 
 @app.route('/api/file/hashes', methods = ['POST'])
 
-def file_hash():
+def file_hash ():
 
     data = request.get_json()
     file_hash = data ['hash']
@@ -120,16 +99,15 @@ def file_hash():
     url = f"https://www.virustotal.com/api/v3/files/{file_hash}"
     response = requests.get(url, headers = {"x-apikey": virus_api_key})
 
-    if response.status_code == 404:
-        return jsonify ({'error': 'Hash not found'}), 404
+    if response.status_code != 200:
+        error_body = response.json()
+        vt_message = error_body.get('error', {}).get('message', 'Unknown error')
+        return jsonify ({'error': vt_message}), response.status_code
     
     result = response.json()
-    print(result)
     score = result['data'] ['attributes'] ['last_analysis_stats']
 
     return jsonify ({'hash': file_hash, 'score': score})
-
-
 
  
 ####### Main Execution Block ######
